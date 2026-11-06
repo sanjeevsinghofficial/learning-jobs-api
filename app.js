@@ -26,6 +26,8 @@ const authMiddleware = require("./middleware/authentication");
 const authRouter = require("./routes/auth");
 const jobsRouter = require("./routes/jobs");
 
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
+
 app.use(
   rateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -35,7 +37,26 @@ app.use(
   }),
 );
 app.use(cors());
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com"],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "cdnjs.cloudflare.com",
+          "fonts.googleapis.com",
+        ],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "online.swagger.io",
+          "validator.swagger.io",
+        ],
+      },
+    },
+  }));
 app.use(xss());
 app.use(express.json());
 // extra packages
@@ -44,8 +65,6 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.send("<h1>Jobs API</h1><a href='/api-docs'>Documentation</a>");
 });
-
-app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/jobs", authMiddleware, jobsRouter);
