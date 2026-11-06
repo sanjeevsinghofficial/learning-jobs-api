@@ -1,0 +1,265 @@
+openapi: 3.0.0
+info:
+  title: Jobs API
+  version: 1.0.0
+  description: API for managing user authentication and job postings.
+servers:
+  - url: 'https://learning-jobs-api.onrender.com/api/v1'
+
+# 1. Define the categories (tags) globally
+tags:
+  - name: Auth
+    description: User registration and login
+  - name: Jobs
+    description: Create, read, and update job postings
+
+paths:
+  /auth/register:
+    post:
+      # 2. Assign the route to the Auth category
+      tags:
+        - Auth
+      summary: Register User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+              example:
+                name: anna
+                email: anna@gmail.com
+                password: secret
+      responses:
+        '201':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                  token:
+                    type: string
+        '400':
+          description: Bad request (e.g., missing fields or email already exists)
+
+  /auth/login:
+    post:
+      # Assign to Auth category
+      tags:
+        - Auth
+      summary: Login User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+              example:
+                email: peter@gmail.com
+                password: secret
+      responses:
+        '200':
+          description: User successfully logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                  token:
+                    type: string
+        '401':
+          description: Invalid credentials
+
+  /jobs:
+    post:
+      # Assign to Jobs category
+      tags:
+        - Jobs
+      summary: Create Job
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - company
+                - position
+              properties:
+                company:
+                  type: string
+                position:
+                  type: string
+              example:
+                company: netflix
+                position: software engineer
+      responses:
+        '201':
+          description: Job created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/Job'
+        '400':
+          description: Bad request (missing company or position)
+        '401':
+          description: Unauthorized (Invalid or missing token)
+
+    get:
+      # Assign to Jobs category
+      tags:
+        - Jobs
+      summary: Get All Jobs
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved list of jobs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Job'
+                  count:
+                    type: integer
+                    example: 2
+        '401':
+          description: Unauthorized
+
+  /jobs/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID of the job
+        schema:
+          type: string
+          example: 6ae8b2ed461e9773bc71d4f2
+    get:
+      # Assign to Jobs category
+      tags:
+        - Jobs
+      summary: Get Job
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved job details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/Job'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Job not found
+
+    patch:
+      # Assign to Jobs category
+      tags:
+        - Jobs
+      summary: Update Job
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                company:
+                  type: string
+                position:
+                  type: string
+                status:
+                  type: string
+              example:
+                company: netflix
+                position: senior software engineer
+                status: pending
+      responses:
+        '200':
+          description: Job updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/Job'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Job not found
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    Job:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6ae8b2ed461e9773bc71d4f2
+        company:
+          type: string
+          example: netflix
+        position:
+          type: string
+          example: software engineer
+        status:
+          type: string
+          example: pending
+        createdAt:
+          type: string
+          format: date-time
