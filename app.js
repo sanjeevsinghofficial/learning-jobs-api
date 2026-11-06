@@ -26,8 +26,6 @@ const authMiddleware = require("./middleware/authentication");
 const authRouter = require("./routes/auth");
 const jobsRouter = require("./routes/jobs");
 
-app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
-
 app.use(
   rateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -65,6 +63,8 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.send("<h1>Jobs API</h1><a href='/api-docs'>Documentation</a>");
 });
+
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/jobs", authMiddleware, jobsRouter);
